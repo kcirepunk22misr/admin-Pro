@@ -9,6 +9,7 @@ import { RegisterFom } from '../interfaces/register-form.interface';
 import { Observable, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { Usuario } from '../models/usuario.model';
+import { CargarUsuario } from '../interfaces/cargar-usuarios.interface';
 
 const base_url = environment.base_url;
 declare const gapi: any;
@@ -32,8 +33,16 @@ export class UsuarioService {
     return localStorage.getItem('x-token') || '';
   }
 
-  private get uid(): string {
+  public get uid(): string {
     return this.usuario._id || '';
+  }
+
+  private get headers() {
+    return {
+      headers: {
+        'x-token': this.token,
+      },
+    };
   }
 
   googleInit() {
@@ -89,11 +98,11 @@ export class UsuarioService {
       ...data,
       role: this.usuario.role,
     };
-    return this.http.put(`${base_url}/usuarios/${this.uid}`, data, {
-      headers: {
-        'x-token': this.token,
-      },
-    });
+    return this.http.put(
+      `${base_url}/usuarios/${this.uid}`,
+      data,
+      this.headers
+    );
   }
 
   login(formData: LoginForm) {
@@ -110,5 +119,42 @@ export class UsuarioService {
         localStorage.setItem('x-token', resp.token);
       })
     );
+  }
+
+  cargarUsuario(desde: number = 0) {
+    const url = `${base_url}/usuarios?desde=${desde}`;
+    return this.http.get<CargarUsuario>(url, this.headers).pipe(
+      map((resp) => {
+        const usuarios = resp.usuarios.map(
+          (user) =>
+            new Usuario(
+              user.nombre,
+              user.email,
+              '',
+              user.img,
+              user.google,
+              user.role,
+              user._id
+            )
+        );
+        return {
+          total: resp.total,
+          usuarios,
+        };
+      })
+    );
+  }
+
+  guardarUsuario(usuario: Usuario) {
+    return this.http.put(
+      `${base_url}/usuarios/${usuario._id}`,
+      usuario,
+      this.headers
+    );
+  }
+
+  eliminarUsuario(usuario: Usuario) {
+    const url = `${base_url}/usuarios/${usuario._id}`;
+    return this.http.delete(url, this.headers);
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 
-type tipos = 'usuarios' | 'medicos' | 'hospitales;';
+type tipos = 'usuarios' | 'medicos' | 'hospitales';
 const base_url = environment.base_url;
 
 @Injectable({
